@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
 	chase = atol(argv[1]);
 	filename = argv[2];
 
-	printf("Loading sets...");
+	printf("Loading sets...\n");
 	start = clock();
 	load_sets(filename, &a, &b);
 	end = clock();
@@ -229,13 +229,24 @@ int binary_search(int* values, int length, int value){
 int chase_value(Array array, int value){
 	int pos;
 	int lower, upper;
-
+	clock_t start, end;
+	double cpu_time;
+	
+	start = clock();
 	merge_sort(array.values, 0, array.length-1);
+	end = clock();
+	cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("Sorting values took %f seconds\n", cpu_time);
 
 	printf("Values sorted:\n");
 	print_array(array);
 
+	start = clock();
 	pos = binary_search(array.values, array.length, value);
+	end = clock();
+	cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+	printf("Search took %f seconds\n", cpu_time);
 	printf("Chasen value (%d) should be at position %d\n", value, pos);
 	
 	if (pos == 0){
