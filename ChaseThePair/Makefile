@@ -1,4 +1,6 @@
+CFLAGS=-Wall -pedantic
+
 all:
-	$(CC) -o chase src/main.c
+	$(CC) $(CFLAGS) -o chase src/main.c 
 clean:
 	rm -f chase
