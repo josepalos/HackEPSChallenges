@@ -1,69 +1,52 @@
 from dataclasses import dataclass
 from typing import List
 import json
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
 
-@dataclass
-class Pokemon:
-    number: int
-    name: str
-    type1: str
-    type2: str
-    sprite_url: str
+engine = create_engine("sqlite:///pokemons.sqlite")
+database_filename = "pokemons.sqlite"
+Base = declarative_base()
+Session = sessionmaker(bind = engine)
+
+
+class Pokemon(Base):
+    __tablename__ = "pokemons"
+
+    number = Column(Integer, primary_key=True)
+    name = Column(String)
+    type1 = Column(String)
+    type2 = Column(String)
+    sprite_url = Column(String)
     # Evolution chain is represented by identifiers, not the pokemon object itself.
-    evolution_related_pokemons: List[int]
+    #evolution_related_pokemons: List[int]
 
     def __repr__(self):
         return "Pokemon [{}, {}]".format(self.number, self.name)
 
 
-class PokemonJsonEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Pokemon):
-            data = obj.__dict__
-            return {"_type": "pokemon", "value": data}
-        return json.JSONEncoder.default(self, obj)
+Base.metadata.create_all(engine)
 
-
-class PokemonJsonDecoder(json.JSONDecoder):
-    def __init__(self, *args, **kwargs):
-        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
-
-    def object_hook(self, dct):
-        if "_type" not in dct:
-            return dct
-        elif dct["_type"] == "pokemon":
-            return Pokemon(**dct["value"])
-        return dct
 
 class PokemonStorage:
-    database_filename = "pokemons.json"
-
-    @classmethod
-    def init(cls):
-        with open(cls.database_filename, "r") as f:
-            pokemons = json.load(f, cls=PokemonJsonDecoder)
-            cls._pokemons = {int(k):v for k,v in pokemons.items()}
-
-    _pokemons = dict()
     @classmethod
     def store_pokemon(cls, pokemon: Pokemon):
-        cls._pokemons[pokemon.number] = pokemon
-
-    @classmethod
-    def get_pokemon_count(cls):
-        return len(cls._pokemons)
+        cls.store_pokemons([pokemon])
 
     @classmethod
     def store_pokemons(cls, pokemons: List[Pokemon]):
-        for pokemon in pokemons:
-            cls.store_pokemon(pokemon)
+        session = Session()
+        session.add_all(pokemons)
+        session.commit()
 
     @classmethod
-    def get_pokemon(cls, identifier: int) -> Pokemon:
-        return cls._pokemons[identifier]
+    def get_pokemon_count(cls):
+        session = Session()
+        return session.query(Pokemon).count()
 
     @classmethod
-    def save(cls):
-        with open(cls.database_filename, "w") as f:
-            json.dump(cls._pokemons, f, cls=PokemonJsonEncoder, indent=4)
+    def get_pokemon(cls, number: int) -> Pokemon:
+        session = Session()
+        return session.query(Pokemon).get(number)

@@ -121,7 +121,8 @@ def parse_infocard(infocard):
 
     evolution_related_pokemons = scrap_evolutions(number, pokemon_url)
 
-    return Pokemon(number, name, type1, type2, image_url, evolution_related_pokemons)
+    # TODO add related pokemons
+    return Pokemon(number=number, name=name, type1=type1, type2=type2, sprite_url=image_url)
 
 
 def get_pokedex(cache=True):
@@ -133,6 +134,6 @@ def get_pokedex(cache=True):
 
     data = get_throttled(POKEDEX_URL)
     soup = BeautifulSoup(data.text, 'html.parser')
-    infocards = soup.find_all(class_="infocard")
+    infocards = soup.find_all(class_="infocard")[:10]
     return [parse_infocard(infocard) for infocard in infocards]
     

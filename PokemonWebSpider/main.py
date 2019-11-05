@@ -3,19 +3,25 @@ import scrapper
 from pokemons import PokemonStorage
 import random
 
+def create_pokedex(args):
+    print("Create the pokedex")
+    pokemons = scrapper.get_pokedex(not args.no_cache)
+    PokemonStorage.store_pokemons(pokemons)
+    print(f"Stored {len(pokemons)} pokemons")
+
+
+def get_team(args):
+    print("Getting a team of 6 pokemons")
+    for i in range(0, 6):
+        pokemon_id = random.randint(1, PokemonStorage.get_pokemon_count())
+        print(PokemonStorage.get_pokemon(pokemon_id))
+
+
 def main(args):
     if args.command == "create-pokedex":
-        print("Create the pokedex")
-        pokemons = scrapper.get_pokedex(not args.no_cache)
-        PokemonStorage.store_pokemons(pokemons)
-        PokemonStorage.save()
-        print(f"Stored {len(pokemons)} pokemons")
+        create_pokedex(args)
     else:
-        print("Getting a team of 6 pokemons")
-        PokemonStorage.init()
-        for i in range(0, 6):
-            pokemon_id = random.randint(1, PokemonStorage.get_pokemon_count() + 1)
-            print(PokemonStorage.get_pokemon(pokemon_id))
+        get_team(args)
 
 
 def create_parser():
