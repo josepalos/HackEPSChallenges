@@ -51,6 +51,10 @@ class PokemonStorage:
         cls._pokemons[pokemon.number] = pokemon
 
     @classmethod
+    def get_pokemon_count(cls):
+        return len(cls._pokemons)
+
+    @classmethod
     def store_pokemons(cls, pokemons: List[Pokemon]):
         for pokemon in pokemons:
             cls.store_pokemon(pokemon)

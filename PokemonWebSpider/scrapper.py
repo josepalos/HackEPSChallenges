@@ -1,5 +1,5 @@
 #/usr/bin/env python3.7
-from pokemons import Pokemon, PokemonStorage
+from pokemons import Pokemon
 
 import requests
 from requests.exceptions import Timeout, ReadTimeout, ConnectionError
@@ -123,7 +123,8 @@ def parse_infocard(infocard):
 
     return Pokemon(number, name, type1, type2, image_url, evolution_related_pokemons)
 
-def create_pokedex(cache=True):
+
+def get_pokedex(cache=True):
     if not cache:
         print("Removing cache")
         requests_cache.clear()
@@ -133,9 +134,5 @@ def create_pokedex(cache=True):
     data = get_throttled(POKEDEX_URL)
     soup = BeautifulSoup(data.text, 'html.parser')
     infocards = soup.find_all(class_="infocard")
-
-    pokemons = [parse_infocard(infocard) for infocard in infocards]
-
-    PokemonStorage.store_pokemons(pokemons)
-    PokemonStorage.save()
-    print(f"Stored {len(pokemons)} pokemons")
+    return [parse_infocard(infocard) for infocard in infocards]
+    
