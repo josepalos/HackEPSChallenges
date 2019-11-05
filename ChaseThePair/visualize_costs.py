@@ -4,6 +4,9 @@ import subprocess
 import glob
 import tempfile
 import os
+import json
+import matplotlib.pylab as plt
+
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 GENERATOR_PATH = os.path.join(BASE_PATH, "resources", "generatorwrapper.sh")
@@ -53,15 +56,44 @@ def execute_solver(tmpdir, chase, set):
   
 
 def main():
-    times = {}
-    sizes = [10, 10**2, 10**3, 5*10**3, 10**4, 5*10**4, 10**5, 5*10**5, 10**6,
-             5*10**6, 10**7, 5*10**7]
-    for size in sizes:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            set_file = generate_set(tmpdir, size)
-            print("Set generated. Start solver")
-            time = execute_solver(tmpdir, "10", set_file)
-        times[size] = time
+    times_filename = "times.json"
+    generate = not os.path.isfile(times_filename)
+    chase_value = 10
+
+    if generate:
+        times = {}
+        sizes = [10, 10**2, 10**3, 5*10**3, 10**4, 5*10**4, 10**5, 5*10**5, 10**6,
+                 5*10**6, 10**7, 5*10**7]
+        for size in sizes:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                set_file = generate_set(tmpdir, size)
+                print("Set generated. Start solver")
+                time = execute_solver(tmpdir, str(chase_value), set_file)
+            times[size] = time
+        with open(times_filename, "w") as f:
+            json.dump(times, f)
+    else:
+        with open(times_filename, "r") as f:
+            times = json.load(f)
+        times = {int(k):v for k,v in times.items()}
+
+
+    print(times.keys())
+    lists = sorted(times.items())
+    x, y = zip(*lists)
+
+    loading = [el["loading"] for el in y]
+    v1_times = [el["v1"] for el in y]
+    v2_times = [el["v2"] for el in y]
+    total_times = [el["total"] for el in y]
+    chase_times = [el["chasing"] for el in y]
+    print(chase_times)
+    plt.plot(x, total_times)
+    plt.plot(x, loading)
+    plt.plot(x, v1_times)
+    plt.plot(x, v2_times)
+    plt.plot(x, chase_times)
+    plt.show()
     print(times)
 
 if __name__ == "__main__":
