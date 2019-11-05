@@ -99,13 +99,13 @@ def parse_infocard(infocard):
     #   </small>
     # </span>
 
-    print("New pokemon")
+    # print("New pokemon")
 
     text_data = infocard.find(class_="infocard-lg-data")
     smalls = text_data.find_all("small")
 
     number = int(smalls[0].text.replace("#", ""))
-    print("Parsing pokemon %d" % number)
+    # print("Parsing pokemon %d" % number)
     name = text_data.a.text
     types_data = smalls[1].find_all('a')
     type1 = types_data[0].text
@@ -123,17 +123,19 @@ def parse_infocard(infocard):
 
     return Pokemon(number, name, type1, type2, image_url, evolution_related_pokemons)
 
-def retrieve_pokedex():
+def create_pokedex(cache=True):
+    if not cache:
+        print("Removing cache")
+        requests_cache.clear()
+    else:
+        print("Using cache")
+
     data = get_throttled(POKEDEX_URL)
     soup = BeautifulSoup(data.text, 'html.parser')
-    infocards = soup.find_all(class_="infocard")[130:140]
+    infocards = soup.find_all(class_="infocard")
 
-    return (parse_infocard(infocard) for infocard in infocards)
+    pokemons = [parse_infocard(infocard) for infocard in infocards]
 
-
-def main():
-    PokemonStorage.store_pokemons(retrieve_pokedex())    
-
-
-if __name__ == "__main__":
-    main()
+    PokemonStorage.store_pokemons(pokemons)
+    PokemonStorage.save()
+    print(f"Stored {len(pokemons)} pokemons")
