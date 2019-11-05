@@ -22,12 +22,14 @@ iteration of the set, we can find the closest value in the set.
 available system)
 
 Output of the solver
+```
 STATISTICS
 Loading time:		9.426174
 Chasing vector 1:	0.243098
 Chasing vector 2:	0.241900
 Total Chasing time:	0.496549
 Total time:		9.922723
+```
 
 **Note** that the times were found using the version 2 of the solver, to
 separate between solving time and loading time.
