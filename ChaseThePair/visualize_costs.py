@@ -10,7 +10,7 @@ import matplotlib.pylab as plt
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 GENERATOR_PATH = os.path.join(BASE_PATH, "resources", "generatorwrapper.sh")
-SOLVER_PATH = os.path.join(BASE_PATH, "chase")
+SOLVER_PATH = os.path.join(BASE_PATH, "chase2")
 
 def generate_set(tmpdir, size):
     command = "{} {}".format(GENERATOR_PATH, size)
