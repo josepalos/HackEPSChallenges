@@ -8,7 +8,7 @@ class Pokemon:
     name: str
     type1: str
     type2: str
-    # sprite: TODO
+    sprite_url: str
     # Evolution chain is represented by identifiers, not the pokemon object itself.
     evolution_related_pokemons: List[int]
 

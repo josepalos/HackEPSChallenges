@@ -80,6 +80,14 @@ def scrap_evolutions(number: int, pokemon_url: str) -> Tuple[int, List[int]]:
 
 def parse_infocard(infocard):
     # Example of infocard:
+    # <span class="infocard-lg-img">
+    #   <a href="/pokedex/bulbasaur">
+    #       <span class="img-fixed img-sprite"
+    #             data-src="https://img.pokemondb.net/sprites/omega-ruby-alpha-sapphire/dex/normal/bulbasaur.png"
+    #             data-alt="Bulbasaur sprite">
+    #       </span>
+    #   </a>
+    # </span>
     # <span class="infocard-lg-data text-muted">
     #   <small>#001</small>
     #   <br>
@@ -107,44 +115,25 @@ def parse_infocard(infocard):
         # This pokemon only has one type
         type2 = None
 
+    image_url = infocard.find(class_="img-sprite").attrs["data-src"]
+
     pokemon_url = text_data.a["href"]
 
     evolution_related_pokemons = scrap_evolutions(number, pokemon_url)
 
-    return Pokemon(number, name, type1, type2, evolution_related_pokemons)
+    return Pokemon(number, name, type1, type2, image_url, evolution_related_pokemons)
 
 def retrieve_pokedex():
     data = get_throttled(POKEDEX_URL)
     soup = BeautifulSoup(data.text, 'html.parser')
-    infocards = soup.find_all(class_="infocard")
+    infocards = soup.find_all(class_="infocard")[130:140]
 
     return (parse_infocard(infocard) for infocard in infocards)
 
+
 def main():
-    # PokemonStorage.store_pokemons([
-    #     Pokemon(1, "Bulbasaur", "grass", "poison", None, 2),
-    #     Pokemon(2, "Ivysaur", "grass", "poison", 1, 3),
-    #     Pokemon(3, "Venusaur", "grass", "poison", 2, 3),
-    # ])
-    # print(PokemonStorage.get_pokemon(2))
+    PokemonStorage.store_pokemons(retrieve_pokedex())    
 
-    PokemonStorage.store_pokemons(retrieve_pokedex())
-    evee = PokemonStorage.get_pokemon(133)
-
-    for pokemon_id in evee.evolution_related_pokemons:
-        try:
-            print(PokemonStorage.get_pokemon(pokemon_id))
-        except KeyError:
-            print("[MISSING] %d" % pokemon_id)
-
-    umbreon = PokemonStorage.get_pokemon(197)
-    for pokemon_id in evee.evolution_related_pokemons:
-        try:
-            print(PokemonStorage.get_pokemon(pokemon_id))
-        except KeyError:
-            print("[MISSING] %d" % pokemon_id)
-
-    
 
 if __name__ == "__main__":
     main()
