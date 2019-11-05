@@ -92,6 +92,37 @@ void push(Array *arr, int value){
 	arr->length += 1;
 }
 
+void parse_set(FILE *fp, Array * arr){
+	char current_c;
+	int current_value;
+
+	arr->values = (int*) malloc(INITIAL_CAPACITY * sizeof(int));
+	arr->length = 0;
+	arr->capacity = INITIAL_CAPACITY;
+
+	// Read until vector starts
+	do{
+		current_c = (char) fgetc(fp);
+	}while(current_c != EOF && current_c != '[');
+
+	// Read integers from vector
+	current_value = 0;
+	while(current_c != EOF){
+		current_c = (char) fgetc(fp);
+		
+		if (current_c == ','){
+			push(arr, current_value);
+			current_value = 0;
+		} else if (current_c == EOF || current_c == ']'){
+			push(arr, current_value);
+			current_value = 0;
+			break;
+		} else {
+			current_value = current_value * 10 + (current_c - '0');
+		}
+	}
+}
+
 void load_sets(const char * filename, Array * a, Array * b){
 	FILE *fp = fopen(filename, "r");
 	if(fp == NULL){
@@ -99,57 +130,8 @@ void load_sets(const char * filename, Array * a, Array * b){
 		exit(1);
 	}
 
-	char current_c;
-	int current_value;
-    a->values = (int*) malloc(INITIAL_CAPACITY * sizeof(int));
-	a->length = 0;
-	a->capacity = INITIAL_CAPACITY;
-
-    b->values = (int*) malloc(INITIAL_CAPACITY * sizeof(int));
-	b->length = 0;
-	b->capacity = INITIAL_CAPACITY;
-
-	// Read until vector start
-	do{
-		current_c = (char) fgetc(fp);
-	}while(current_c != EOF && current_c != '[');
-
-	// Read integers for A
-	current_value = 0;
-	while(current_c != EOF){
-		current_c = (char) fgetc(fp);
-		if (current_c == ','){
-			push(a, current_value);
-			current_value = 0;
-		} else if (current_c == EOF || current_c == ']'){
-			push(a, current_value);
-			current_value = 0;
-			break;
-		} else{
-			current_value = current_value * 10 + (current_c - '0');
-		}
-	}
-
-	// Read until vector start
-	do{
-		current_c = (char) fgetc(fp);
-	}while(current_c != EOF && current_c != '[');
-
-	// Read integers for B
-	current_value = 0;
-	while(current_c != EOF){
-		current_c = (char) fgetc(fp);
-		if (current_c == ','){
-			push(b, current_value);
-			current_value = 0;
-		} else if (current_c == EOF || current_c == ']'){
-			push(b, current_value);
-			current_value = 0;
-			break;
-		} else {
-			current_value = current_value * 10 + (current_c - '0');
-		}
-	}
+	parse_set(fp, a);
+	parse_set(fp, b);
 
 	fclose(fp);
 }
