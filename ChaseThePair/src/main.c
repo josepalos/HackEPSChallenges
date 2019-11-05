@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <limits.h>
 
 #define MAX_ELEMENTS_TO_PRINT 10
 #define INITIAL_CAPACITY 10
@@ -136,110 +137,24 @@ void load_sets(const char * filename, Array * a, Array * b){
 	fclose(fp);
 }
 
-void merge(int* values, int start, int middle, int end){
-	int tmp1_len = middle - start + 1;
-	int tmp2_len = end - middle;
-	int *tmp1 = (int*) malloc(tmp1_len * sizeof(int));
-	int *tmp2 = (int*) malloc(tmp2_len * sizeof(int));
-	int i, j, current;
-	i = j = 0;
-	current = start;
-
-	memcpy(tmp1, values + start,  (tmp1_len) * sizeof(int));
-	memcpy(tmp2, values + middle + 1, (tmp2_len) * sizeof(int));
-
-	while(i < tmp1_len && j < tmp2_len){
-		if(tmp1[i] <= tmp2[j]){
-			values[current] = tmp1[i];
-			i++;
-		}else{
-			values[current] = tmp2[j];
-			j++;
-		}
-		current++;
-	}
-
-	// Copy remaining elements
-	while(i < tmp1_len){
-		values[current] = tmp1[i];
-		i++;
-		current++;
-	}
-	free(tmp1);
-	while(j < tmp2_len){
-		values[current] = tmp2[j];
-		j++;
-		current++;
-	}
-	free(tmp2);
-}
-
-void merge_sort(int* values, int start, int end){
-	if (start < end){
-		int middle = start + (end - start) / 2;
-
-		merge_sort(values, start, middle);
-		merge_sort(values, middle+1, end);
-
-		merge(values, start, middle, end);
-	}
-}
-
-int binary_search(int* values, int length, int value){
-	int start = 0;
-	int end = length;
-	int middle;
-	int middle_value;
-
-	while(start < end){
-		middle = (start + (end - start) / 2);
-		middle_value = values[middle];
-		if (middle_value == value){
-			return middle;
-		}else if(middle_value < value){
-			start = middle + 1;	
-		}else{
-			end = middle;
-		}
-	}
-    if(middle_value < value)
-		return middle + 1;
-	else
-		return middle;
-}
-
 int chase_value(Array array, int value){
-	int pos;
-	int lower, upper;
 	clock_t start, end;
 	double cpu_time;
+	int found;
+	int distance;
+	int min_distance = INT_MAX;
 	
 	start = clock();
-	merge_sort(array.values, 0, array.length-1);
-	end = clock();
-	cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
-	printf("Sorting values took %f seconds\n", cpu_time);
-
-	printf("Values sorted:\n");
-	print_array(array);
-
-	start = clock();
-	pos = binary_search(array.values, array.length, value);
+	for(int i=0; i < array.length; i++){
+		distance = abs(array.values[i] - value);
+		if(distance < min_distance){
+			min_distance = distance;
+			found = array.values[i];
+		}
+	}
 	end = clock();
 	cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
 
 	printf("Search took %f seconds\n", cpu_time);
-	printf("Chasen value (%d) should be at position %d\n", value, pos);
-	
-	if (pos == 0){
-		return array.values[pos];
-	} else {
-		lower = array.values[pos - 1];
-		upper = array.values[pos];
-		if (abs(lower - value) < abs(upper - value)){
-			return lower;
-		}else{
-			return upper;
-		}
-	}
+	return found;
 }
