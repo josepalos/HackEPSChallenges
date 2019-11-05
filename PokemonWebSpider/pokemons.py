@@ -10,8 +10,7 @@ class Pokemon:
     type2: str
     # sprite: TODO
     # Evolution chain is represented by identifiers, not the pokemon object itself.
-    evolves_from: int
-    evolves_to: List[int]
+    evolution_related_pokemons: List[int]
 
     def __repr__(self):
         return "Pokemon [{}, {}]".format(self.number, self.name)
