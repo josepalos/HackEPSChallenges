@@ -2,6 +2,8 @@ import argparse
 import scrapper
 from pokemons import PokemonStorage
 import random
+from webgenerator import create_team_page
+
 
 def create_pokedex(args):
     print("Create the pokedex")
@@ -28,13 +30,7 @@ def get_team(args):
         team.append(random.choice(pokemons))
         current_types.update((type1, type2))
 
-
-    print("| {:15s} | {:10s} | {:10s} |".format("Name", "Type 1", "Type 2"))
-    print('-'*(15+10+10+10))
-    for pokemon in team:
-        print(f"| {pokemon.name:15s} | {pokemon.type1:10s} | {pokemon.type2:10s} |")
-
-    print(len(current_types))
+    create_team_page(team)
 
 
 def main(args):
