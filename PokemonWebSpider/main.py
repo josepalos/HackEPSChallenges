@@ -13,9 +13,28 @@ def create_pokedex(args):
 
 def get_team(args):
     print("Getting a team of 6 pokemons")
-    for i in range(0, 6):
-        pokemon_id = random.randint(1, PokemonStorage.get_pokemon_count())
-        print(PokemonStorage.get_pokemon(pokemon_id))
+    team = list()
+    current_types = set()
+
+    type_pairs = PokemonStorage.get_type_pairs(exclude_none=True)
+    random.shuffle(type_pairs)
+
+    while len(team) < 6:
+        type1, type2 = type_pairs.pop()
+        if type1 in current_types or type2 in current_types:
+            continue
+
+        pokemons = PokemonStorage.get_pokemons_with_types(type1, type2)
+        team.append(random.choice(pokemons))
+        current_types.update((type1, type2))
+
+
+    print("| {:15s} | {:10s} | {:10s} |".format("Name", "Type 1", "Type 2"))
+    print('-'*(15+10+10+10))
+    for pokemon in team:
+        print(f"| {pokemon.name:15s} | {pokemon.type1:10s} | {pokemon.type2:10s} |")
+
+    print(len(current_types))
 
 
 def main(args):

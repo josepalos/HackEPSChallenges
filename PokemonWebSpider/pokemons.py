@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 import json
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker
@@ -56,3 +56,19 @@ class PokemonStorage:
     def get_pokemon(cls, number: int) -> Pokemon:
         session = Session()
         return session.query(Pokemon).get(number)
+
+    @classmethod
+    def get_pokemons_with_types(cls, type1, type2) -> List[Pokemon]:
+        session = Session()
+        l1 = session.query(Pokemon).filter(Pokemon.type1 == type1, Pokemon.type2 == type2).all()
+        l2 = session.query(Pokemon).filter(Pokemon.type1 == type2, Pokemon.type2 == type1).all()
+
+        return list(set((*l1, *l2)))
+
+    @classmethod
+    def get_type_pairs(cls, exclude_none=False) -> List[Tuple[str, str]]:
+        session = Session()
+        query = session.query(Pokemon.type1, Pokemon.type2)
+        if exclude_none:
+            query = query.filter(Pokemon.type1 != None, Pokemon.type2 != None)
+        return list(set(query.all()))
