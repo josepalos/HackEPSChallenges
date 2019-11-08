@@ -105,7 +105,7 @@ def parse_infocard(infocard):
     smalls = text_data.find_all("small")
 
     number = int(smalls[0].text.replace("#", ""))
-    # print("Parsing pokemon %d" % number)
+    print("Parsing pokemon %d" % number)
     name = text_data.a.text
     types_data = smalls[1].find_all('a')
     type1 = types_data[0].text
@@ -134,6 +134,6 @@ def get_pokedex(cache=True):
 
     data = get_throttled(POKEDEX_URL)
     soup = BeautifulSoup(data.text, 'html.parser')
-    infocards = soup.find_all(class_="infocard")[:10]
+    infocards = soup.find_all(class_="infocard")
     return [parse_infocard(infocard) for infocard in infocards]
     

@@ -32,6 +32,12 @@ Base.metadata.create_all(engine)
 
 class PokemonStorage:
     @classmethod
+    def clean_database(cls):
+        session = Session()
+        session.query(Pokemon).delete()
+        session.commit()
+
+    @classmethod
     def store_pokemon(cls, pokemon: Pokemon):
         cls.store_pokemons([pokemon])
 

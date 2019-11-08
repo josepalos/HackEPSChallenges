@@ -5,6 +5,7 @@ import random
 
 def create_pokedex(args):
     print("Create the pokedex")
+    PokemonStorage.clean_database()
     pokemons = scrapper.get_pokedex(not args.no_cache)
     PokemonStorage.store_pokemons(pokemons)
     print(f"Stored {len(pokemons)} pokemons")
