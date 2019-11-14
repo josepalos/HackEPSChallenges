@@ -1,3 +1,4 @@
+from itertools import combinations
 from dataclasses import dataclass
 from typing import List, Tuple
 import json
@@ -58,6 +59,9 @@ Pokemon.all_related = relationship("Pokemon",
 Base.metadata.create_all(engine)
 
 
+def flat(list_):
+    return [item for sublist in list_ for item in sublist]
+
 class PokemonStorage:
     @classmethod
     def clean_database(cls):
@@ -66,13 +70,19 @@ class PokemonStorage:
         session.commit()
 
     @classmethod
-    def store_pokemon(cls, pokemon: Pokemon):
-        cls.store_pokemons([pokemon])
+    def store_pokemon(cls, pokemon: Pokemon, chain: List[int]):
+        cls.store_pokemons([pokemon], [chain])
 
     @classmethod
-    def store_pokemons(cls, pokemons: List[Pokemon]):
+    def store_pokemons(cls, pokemons: List[Pokemon], chains: List[List[int]]):
         session = Session()
         session.add_all(pokemons)
+
+        chains_pairs = set(flat(combinations(chain, 2) for chain in chains))
+        for chain in chains_pairs:
+            query = evolution_chain.insert().values(pokemon1=chain[0],
+                                                    pokemon2=chain[1])
+            session.execute(query)
         session.commit()
 
     @classmethod
@@ -100,4 +110,3 @@ class PokemonStorage:
         if exclude_none:
             query = query.filter(Pokemon.type1 != None, Pokemon.type2 != None)
         return list(set(query.all()))
-   

@@ -9,8 +9,10 @@ def create_pokedex(args):
     print("Create the pokedex")
     PokemonStorage.clean_database()
     pokemons = scrapper.get_pokedex(not args.no_cache)
-    PokemonStorage.store_pokemons(pokemons)
+    PokemonStorage.store_pokemons(pokemons.keys(), pokemons.values())
     print(f"Stored {len(pokemons)} pokemons")
+
+    print(PokemonStorage.get_pokemon(133).all_related)
 
 
 def get_team(args):
