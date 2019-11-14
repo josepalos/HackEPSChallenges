@@ -101,7 +101,9 @@ class PokemonStorage:
         l1 = session.query(Pokemon).filter(Pokemon.type1 == type1, Pokemon.type2 == type2).all()
         l2 = session.query(Pokemon).filter(Pokemon.type1 == type2, Pokemon.type2 == type1).all()
 
-        return list(set((*l1, *l2)))
+        union = list(set((*l1, *l2)))
+        union.sort(key=lambda pok: pok.number)
+        return union
 
     @classmethod
     def get_type_pairs(cls, exclude_none=False) -> List[Tuple[str, str]]:
@@ -109,4 +111,6 @@ class PokemonStorage:
         query = session.query(Pokemon.type1, Pokemon.type2)
         if exclude_none:
             query = query.filter(Pokemon.type1 != None, Pokemon.type2 != None)
-        return list(set(query.all()))
+        pairs = list(set(query.all()))
+        pairs.sort()
+        return pairs
