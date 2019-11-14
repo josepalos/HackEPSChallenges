@@ -10,30 +10,26 @@ Este reto consiste en conseguir crear un equipo de 6 pokémon de doble tipo (pla
 
 Cómo RESTRICCIÓN addicional, no se pueden poner pokémon de la misma cadena evolutiva, por ejemplo, se puede poner a eevee, pero entonces todas sus evoluciones quedan descartadas (eevee, flareon, vaporeon, jolteon...).
 
-# <img src="https://image.flaticon.com/icons/svg/595/595067.svg" alt="Warning Icon" height="40" width="40"> ¡Importante!
-### Elementos a destacar
-Si se hardcodea la solución, esta será invalidada.
+# Usage
+The proposed solution has two steps:
 
-### ¿Qué se debe entregar? 
-Un html con la solución al problema y el código usado para obtener dicha solución. Toda entrega que no cumpla las restricciones y no haga lo que se le pide no será evaluada.
+1. Scrap the pokedex website to generate a database with pokemons.
+2. Using this database, create the team while banning (1) types and (2) pokemons
+from the same evolution chain.
 
-Se puede enviar link de un repositorio github que contenga lo que se os dice anteriormente.
+To create the pokedex use:
+```
+$ python main.py create-pokedex [--no-cache]
+```
 
-Todo lo mencionado anteriormente, ponedlo en vuestro perfil de la web de hackeps 2019 para que pueda ser revisado correctamente.
+To generate a team use:
+```
+$ python main.py get-team [--seed SEED]
+```
 
-# Extras
-### <img src="https://image.flaticon.com/icons/svg/2132/2132377.svg" alt="Explanation Icon" height="40" width="40"> Conocimientos essenciales
-Para realizar este reto son los siguientes:
-- Python
-- Beatiful Soup(bs4) / Selenium Web Driver
-- Web Scrapping
-- HTML + CSS
+To generate the _html_ file, use:
+```
+$ python main.py get-team --html [--seed SEED]
+```
 
-## <img src="https://image.flaticon.com/icons/svg/2165/2165247.svg" alt="Explanation Icon" height="40" width="40"> Enlaces útiles 
-
-[Base de datos pokémon](https://pokemondb.net/)
-
-[Beautiful Soup(bs4)](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
-
-[Selenium](https://www.seleniumhq.org/docs/03_webdriver.jsp)
-
+[The generated _html_](team.html) was created using the seed 1234.
