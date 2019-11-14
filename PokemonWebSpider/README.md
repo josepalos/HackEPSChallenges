@@ -33,3 +33,5 @@ $ python main.py get-team --html [--seed SEED]
 ```
 
 [The generated _html_](team.html) was created using the seed 1234.
+
+**View team with the htmlpreview.github.com tool:** [TEAM 1234](http://htmlpreview.github.io/?https://github.com/josepalos/HackEPSChallenges/blob/master/PokemonWebSpider/team.html)
