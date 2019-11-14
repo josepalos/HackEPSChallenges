@@ -5,7 +5,7 @@ import requests
 from requests.exceptions import Timeout, ReadTimeout, ConnectionError
 import requests_cache
 from bs4 import BeautifulSoup
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 import functools
 import time
 import sys
@@ -16,7 +16,7 @@ MAX_DELAY_REQUESTS = 5
 requests_cache.install_cache("pokemons_cache", expire_after=24*60*60)
 
 
-def get_throttled(url):
+def get_throttled(url: str) -> BeautifulSoup:
     delay = 0
     while True:
         try:
@@ -31,12 +31,12 @@ POKEDEX_BASE_URL = "https://pokemondb.net"
 POKEDEX_URL = "{}/pokedex/national".format(POKEDEX_BASE_URL)
 
 
-def get_pokemon_number(infocard) -> bool:
+def get_pokemon_number(infocard: BeautifulSoup) -> int:
     infocard_id = infocard.find("small").text
     return int(infocard_id.replace("#", ""))
 
 
-def scrap_evolutions(number: int, pokemon_url: str) -> Tuple[int, List[int]]:
+def scrap_evolutions(number: int, pokemon_url: str) -> List[int]:
     # Example of evolution information:
     # <div class="infocard-list-evo">
     #   <div class="infocard ">
@@ -78,7 +78,7 @@ def scrap_evolutions(number: int, pokemon_url: str) -> Tuple[int, List[int]]:
     return list(related_pokemons)
     
 
-def parse_infocard(infocard):
+def parse_infocard(infocard: BeautifulSoup) -> Tuple[Pokemon, List[int]]:
     # Example of infocard:
     # <span class="infocard-lg-img">
     #   <a href="/pokedex/bulbasaur">
@@ -98,9 +98,6 @@ def parse_infocard(infocard):
     #       <a href="/type/poison" class="itype poison">Poison</a>
     #   </small>
     # </span>
-
-    # print("New pokemon")
-
     text_data = infocard.find(class_="infocard-lg-data")
     smalls = text_data.find_all("small")
 
@@ -119,13 +116,16 @@ def parse_infocard(infocard):
 
     pokemon_url = text_data.a["href"]
 
+    pokemon = Pokemon(number=number, name=name, type1=type1, type2=type2, sprite_url=image_url)
     evolution_related_pokemons = scrap_evolutions(number, pokemon_url)
 
-    # TODO add related pokemons
-    return Pokemon(number=number, name=name, type1=type1, type2=type2, sprite_url=image_url)
+    return pokemon, evolution_related_pokemons
 
 
-def get_pokedex(cache=True):
+def get_pokedex(cache: bool=True) -> Dict[Pokemon, List[int]]:
+    """
+    Returns a dictionary where the keys are all the pokemons and the values are the list of related pokemons.
+    """
     if not cache:
         print("Removing cache")
         requests_cache.clear()
@@ -135,5 +135,13 @@ def get_pokedex(cache=True):
     data = get_throttled(POKEDEX_URL)
     soup = BeautifulSoup(data.text, 'html.parser')
     infocards = soup.find_all(class_="infocard")
-    return [parse_infocard(infocard) for infocard in infocards]
-    
+
+    parsed = (parse_infocard(infocard) for infocard in infocards)
+    return {pokemon: chain for pokemon, chain in parsed}
+
+if __name__ == "__main__":
+    import time
+    start = time.time()
+    get_pokedex()
+    end = time.time()
+    print(end - start)
