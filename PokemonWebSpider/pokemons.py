@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 import json
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Column, Integer, String, Table, ForeignKey, select
+from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 
@@ -10,6 +10,15 @@ engine = create_engine("sqlite:///pokemons.sqlite")
 database_filename = "pokemons.sqlite"
 Base = declarative_base()
 Session = sessionmaker(bind = engine)
+
+# Evolution self-relation explained in:
+# https://stackoverflow.com/a/9119764
+evolution_chain = Table(
+    "evolution_chain",
+    Base.metadata,
+    Column("pokemon1", Integer, ForeignKey("pokemons.number"), primary_key=True),
+    Column("pokemon2", Integer, ForeignKey("pokemons.number"), primary_key=True)
+)
 
 
 class Pokemon(Base):
@@ -20,11 +29,30 @@ class Pokemon(Base):
     type1 = Column(String)
     type2 = Column(String)
     sprite_url = Column(String)
-    # Evolution chain is represented by identifiers, not the pokemon object itself.
-    #evolution_related_pokemons: List[int]
+    related = relationship("Pokemon",
+                secondary=evolution_chain,
+                primaryjoin=number == evolution_chain.c.pokemon1,
+                secondaryjoin=number == evolution_chain.c.pokemon2)
 
     def __repr__(self):
         return "Pokemon [{}, {}]".format(self.number, self.name)
+
+# Viewonly relationship that selects across all the related pokemons.
+chain_union = select([
+    evolution_chain.c.pokemon1,
+    evolution_chain.c.pokemon2
+]).union(
+    select([
+        evolution_chain.c.pokemon2,
+        evolution_chain.c.pokemon1
+    ])
+).alias()
+
+Pokemon.all_related = relationship("Pokemon",
+                        secondary=chain_union,
+                        primaryjoin=Pokemon.number == chain_union.c.pokemon1,
+                        secondaryjoin=Pokemon.number == chain_union.c.pokemon2,
+                        viewonly=True)
 
 
 Base.metadata.create_all(engine)
@@ -72,3 +100,4 @@ class PokemonStorage:
         if exclude_none:
             query = query.filter(Pokemon.type1 != None, Pokemon.type2 != None)
         return list(set(query.all()))
+   
