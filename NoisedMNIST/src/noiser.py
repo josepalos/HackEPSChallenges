@@ -2,10 +2,19 @@
 Adapted from LleidaHack challenges:
 https://github.com/LleidaHack/HackEPSChallenges/
 """
+import os
+
+from typing import Union
+from pathlib import Path
+
+import requests
 import numpy as np
 from sklearn.datasets import fetch_openml
 
 IMAGE_SIZE = 28
+DATASET_URL = ('https://firebasestorage.googleapis.com/v0/b/hackeps-2019.'      
+               'appspot.com/o/noised-MNIST.npz?alt=media&token=4cee641b-9e31'   
+               '-42c4-b9c8-e771d2eecbad')  
 
 #@title Code to add noise to MNIST images
 class Deformation(object):
@@ -52,7 +61,18 @@ class DeformationPipeline(object):
 noise_mnist = DeformationPipeline(WhitePatch(7.), 
                                   DropPixels(8.))
 
-def get_noised_mnist():
+def generate_noised_mnist():
     x, y = fetch_openml('mnist_784', return_X_y=True)
     y = y.astype(np.int32)
     return np.stack([noise_mnist(o) for o in x]), y
+
+
+def fetch_remote_dataset(file_path: Union[str, Path], force: bool = False):
+    if not force and os.path.isfile(Path(file_path)):
+        print("Dataset already downloaded")
+        return
+
+    with requests.get(DATASET_URL, allow_redirects=True, stream=True) as req, \
+            open(Path(file_path), "wb") as dataset_file:
+        req.raise_for_status()
+        shutil.copyfileobj(req.raw, dataset_file)

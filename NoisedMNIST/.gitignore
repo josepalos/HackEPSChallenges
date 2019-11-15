@@ -2,3 +2,4 @@
 data/
 noised-MNIST.npz
 .venv
+**/__pycache__
