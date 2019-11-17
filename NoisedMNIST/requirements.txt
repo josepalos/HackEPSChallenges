@@ -2,3 +2,4 @@ requests
 numpy
 sklearn
 matplotlib
+tensorflow>=2.0.0

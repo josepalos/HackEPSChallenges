@@ -28,15 +28,6 @@ def download_file(url: str,
         shutil.copyfileobj(req.raw, file_)
 
 
-def train(data_x: np.ndarray,
-          data_y: np.ndarray) -> LogisticRegression:
-    lr_model = LogisticRegression(multi_class='auto',
-                                  solver='lbfgs',
-                                  max_iter=500)
-    lr_model.fit(data_x, data_y)
-    return lr_model
-
-
 def create_submission_file(preds: np.ndarray,
                            base_path: Union[str, Path] = '.'):
     preds = preds.flatten().astype(str)
@@ -59,6 +50,14 @@ def submit_model(model, force_download: bool = False):
     print("Submission file created: %s" % fname)
 
 
+def train_basic_model(data_x: np.ndarray,
+                      data_y: np.ndarray) -> LogisticRegression:
+    lr_model = LogisticRegression(multi_class='auto',
+                                  solver='lbfgs',
+                                  max_iter=500)
+    lr_model.fit(data_x, data_y)
+    return lr_model
+
 def main():
     fname = 'noised-MNIST.npz'
     print("Downloading dataset")
@@ -69,7 +68,7 @@ def main():
     data_x, data_y, _ = data.values()
 
     print("Training... This might take a while")
-    model = train(data_x, data_y)
+    model = train_basic_model(data_x, data_y)
 
     print("Generate the submit file using this model")
     submit_model(model)
