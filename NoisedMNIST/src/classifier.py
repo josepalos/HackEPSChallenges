@@ -11,7 +11,6 @@ from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.pyplot as plt
 
 import noiser
-############################
 
 NOISED_MNIST_FILENAME = 'noised-MNIST.npz'
 SEED = 12345
@@ -51,6 +50,34 @@ class ImageScaler(BaseEstimator, TransformerMixin):
         x = x.astype(np.float64)
         x = x / float(self.scale_factor)
         return x
+    
+
+class Classifier:
+    def __init__(self):
+        self.preprocessing_pipeline = Pipeline([
+            # Normalize values for each pixel between (1, 0)
+            ('scale', ImageScaler(255)),
+            # Standarize values
+            ('standardize', StandardScaler())
+        ])
+        self.model =  RandomForestClassifier(n_estimators=20, max_depth=10)
+    
+    def train(self, x_data, y_data):
+        preprocessed_data = self._preprocess_data(x_data, train=True)
+        self.model.fit(preprocessed_data, y_data)
+
+    def test(self, x_data):
+        preprocessed_data = self._preprocess_data(x_data)
+        return self.model.predict(preprocessed_data)        
+
+    def _preprocess_data(self, data, train=False):
+        if train:
+            # Preprocess, but also learn the std deviation and the mean
+            # in the StandardScaler.
+            return self.preprocessing_pipeline.fit_transform(data)
+        else:
+            return self.preprocessing_pipeline.transform(data)
+
 
 def plot_confusion_matrix(y_true, y_pred,
                           cmap=plt.cm.Blues):
@@ -88,30 +115,10 @@ def main(generate_new_noised_dataset: bool = False,
     x_train, x_test, y_train, y_test = train_test_split(x, y,
                                                         test_size=.33,
                                                         random_state=SEED)
-    preprocessing_pipeline = Pipeline([
-        # Normalize values for each pixel between (1, 0)
-        ('scale', ImageScaler(255)),
-        # Standarize values
-        ('standardize', StandardScaler())
-    ])
 
-    # Apply the transformation
-    # Note: That we also fit the pipeline here, this is because
-    # we want the StandardScaler to learn the mean and std deviation
-    # of the training set
-    x_train_prep = preprocessing_pipeline.fit_transform(x_train)
-
-    # Train the model
-    rnd_forest = RandomForestClassifier(n_estimators=20, max_depth=10)
-    rnd_forest.fit(x_train_prep, y_train)
-
-    # Test the model    
-    # Note: Here we only call transform because we are using the mean and std
-    # learned from the training set
-    x_test_prep = preprocessing_pipeline.transform(x_test)
-
-    # Make predictions
-    y_pred = rnd_forest.predict(x_test_prep)
+    classifier = Classifier()
+    classifier.train(x_train, y_train)
+    y_pred = classifier.test(x_test)
 
     print(classification_report(y_test, y_pred))
     plot_confusion_matrix(y_test, y_pred)
@@ -122,7 +129,7 @@ def main(generate_new_noised_dataset: bool = False,
         y = y.astype(np.int32)
 
         x_test_prep = preprocessing_pipeline.transform(x_test)
-        y_pred = rnd_forest.predict(x_test_prep)
+        y_pred = classifier.test(x_test)
 
         print(classification_report(y_test, y_pred))
         plot_confusion_matrix(y_test, y_pred)
