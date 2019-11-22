@@ -19,14 +19,14 @@ DATASET_URL = ('https://firebasestorage.googleapis.com/v0/b/hackeps-2019.'
 #@title Code to add noise to MNIST images
 class Deformation(object):
 
-  def __init__(self, probability):
-    self.probability = probability
+  def __init__(self, mutation_chance):
+    self.mutation_chance = mutation_chance
 
   def transform(self, x):
     pass
 
   def __call__(self, x):
-    if np.random.random() > self.probability:
+    if np.random.random() > self.mutation_chance:
       return x
     
     return self.transform(x)
@@ -61,10 +61,16 @@ class DeformationPipeline(object):
 noise_mnist = DeformationPipeline(WhitePatch(7.), 
                                   DropPixels(8.))
 
-def generate_noised_mnist():
+def generate_noised_mnist(times: int=1):
     x, y = fetch_openml('mnist_784', return_X_y=True)
     y = y.astype(np.int32)
-    return np.stack([noise_mnist(o) for o in x]), y
+
+    noise = list()
+    for n in range(0, times):
+        noise.extend([noise_mnist(o) for o in x])
+
+    noised_x = np.stack(noise)
+    return noised_x, np.tile(y, times)
 
 
 def fetch_remote_dataset(file_path: Union[str, Path], force: bool = False):
@@ -76,3 +82,4 @@ def fetch_remote_dataset(file_path: Union[str, Path], force: bool = False):
             open(Path(file_path), "wb") as dataset_file:
         req.raise_for_status()
         shutil.copyfileobj(req.raw, dataset_file)
+

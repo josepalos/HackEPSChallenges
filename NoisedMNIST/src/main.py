@@ -1,6 +1,7 @@
 import time
 import datetime
 import json
+import argparse
 
 import numpy as np
 
@@ -64,13 +65,14 @@ def plot_confusion_matrix(y_true, y_pred,
 
 def train_and_test(classifier,
                    generate_new_noised_dataset: bool = False,
+                   generate_noise_repetitions: int=1,
                    test_original: bool = False,
                    create_submission: bool = False,
                    seed: int = SEED):
     np.random.seed(seed)
 
     if generate_new_noised_dataset:
-        x, y = noiser.generate_noised_mnist()
+        x, y = noiser.generate_noised_mnist(generate_noise_repetitions)
     else:
         noiser.fetch_remote_dataset(NOISED_MNIST_FILENAME)
         x, y = load_data(NOISED_MNIST_FILENAME)
@@ -95,19 +97,19 @@ def train_and_test(classifier,
     print(classification_report(y_test, y_pred))
     # plot_confusion_matrix(y_test, y_pred)
     # plt.show()
-
-    if test_original:
-        x_test2, y_test2 = fetch_openml('mnist_784', return_X_y=True)
-        y_test2 = y_test2.astype(np.int32)
-
-        y_pred2 = classifier.test(x_test2)
-
-        print(classification_report(y_test2, y_pred2))
-        plot_confusion_matrix(y_test, y_pred2)
-        plt.show()
     
     if create_submission:
         submission.submit_model(classifier)
+
+    if generate_new_noised_dataset:
+        print("Accuracy in the generated dataset: %f" % \
+              accuracy_score(y_test, y_pred))
+        print("Testing on the provided dataset:")
+        noiser.fetch_remote_dataset(NOISED_MNIST_FILENAME)
+        x, y = load_data(NOISED_MNIST_FILENAME)
+
+        y_pred = classifier.predict(x)
+        return accuracy_score(y, y_pred)
 
     return accuracy_score(y_test, y_pred)
 
@@ -153,6 +155,7 @@ def compare_models():
 
 
 def main():
+    # SETUP
     batch_size = 128
     convolutions = [
         (32, (3, 3), "relu"),
@@ -160,18 +163,32 @@ def main():
     ]
     dense_layers = [
         (128, "relu"),
-        (512, "relu")
+        (512, "relu"),
     ]
     epochs = 40
     seed = 1234
 
+    generate_noise = False
+    #generate_noise_repetitions = 4
+
+    create_submission = True
+
+
+    # MAIN
     classifier = classifiers.NNClassifier(batch_size=batch_size,
                                           convolutions=convolutions,
                                           dense_layers=dense_layers,
                                           epochs=epochs,
                                           verbose=True)
-    accuracy = train_and_test(classifier, seed=seed, create_submission=True)
+    accuracy = train_and_test(
+        classifier,
+        generate_new_noised_dataset=generate_noise,
+        #generate_noise_repetitions=generate_noise_repetitions,
+        seed=seed,
+        create_submission=create_submission
+    )
     print(accuracy)
+
 
 if __name__ == "__main__":
     main()

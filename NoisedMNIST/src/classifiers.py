@@ -7,7 +7,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 import tensorflow as tf
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
+from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, \
+    Dropout
 from tensorflow.keras.models import Sequential
 
 # TODO REMOVE THIS
@@ -64,7 +65,8 @@ class NNClassifier:
                  epochs=60,
                  verbose=False,
                  dense_layers=[(128, "relu"), (512, "relu")],
-                 convolutions=[(32, (3, 3), "relu"), (64, (3, 3), "relu")]):
+                 convolutions=[(32, (3, 3), "relu"), (64, (3, 3), "relu")],
+                 dropout=0.25):
 
         self.verbose = verbose
 
@@ -77,6 +79,7 @@ class NNClassifier:
         self.convolutions = convolutions
         self.dense_layers = dense_layers
         self.input_shape = (28, 28, 1)  # 28 pixels x 28 pixels x 1 channel
+        self.dropout = dropout
         self.output_classes = 10
         self.batch_size = batch_size
         self.epochs = epochs
@@ -96,7 +99,7 @@ class NNClassifier:
             model.add(Conv2D(size, kernel_size=kernel, activation=activation))
 
         model.add(MaxPooling2D(pool_size=(2, 2)))
-
+        model.add(Dropout(self.dropout))
         model.add(Flatten())
 
         for units, activation in self.dense_layers:
