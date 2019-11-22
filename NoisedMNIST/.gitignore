@@ -3,3 +3,5 @@ data/
 noised-MNIST.npz
 .venv
 **/__pycache__
+results.json
+models.json

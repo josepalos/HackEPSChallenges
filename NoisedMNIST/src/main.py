@@ -1,8 +1,13 @@
+import time
+import datetime
+import json
+
 import numpy as np
 
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import confusion_matrix, classification_report, \
+                            accuracy_score
 
 import matplotlib.pyplot as plt
 
@@ -57,10 +62,12 @@ def plot_confusion_matrix(y_true, y_pred,
     fig.tight_layout()
 
 
-def main(generate_new_noised_dataset: bool = False,
-         test_original: bool = False,
-         create_submission: bool = False):
-    np.random.seed(SEED)
+def train_and_test(classifier,
+                   generate_new_noised_dataset: bool = False,
+                   test_original: bool = False,
+                   create_submission: bool = False,
+                   seed: int = SEED):
+    np.random.seed(seed)
 
     if generate_new_noised_dataset:
         x, y = noiser.generate_noised_mnist()
@@ -74,13 +81,14 @@ def main(generate_new_noised_dataset: bool = False,
 
     x_train, x_test, y_train, y_test = train_test_split(x, y,
                                                         test_size=.33,
-                                                        random_state=SEED)
+                                                        random_state=seed)
 
-    # classifier = classifiers.RandomForestClassifier()
-    classifier = classifiers.NNClassifier()
-
+    start = time.time()
     classifier.fit(x_train, y_train)
-    print("###################### TRAINED ##########################")
+    end = time.time()
+    ellapsed_time = str(datetime.timedelta(seconds=(end - start)))
+    print(f"Training took {ellapsed_time} seconds")
+
     y_pred = classifier.predict(x_test)
     print(y_pred)
 
@@ -101,6 +109,69 @@ def main(generate_new_noised_dataset: bool = False,
     if create_submission:
         submission.submit_model(classifier)
 
+    return accuracy_score(y_test, y_pred)
+
+
+def get_classifier(verbose: bool = False):
+    # classifier = classifiers.RandomForestClassifier()
+    classifier = classifiers.NNClassifier(batch_size=128, epochs=40,
+                                          verbose=verbose)
+    print("Using NN classifier")
+
+    return classifier
+
+
+def compare_models():
+    with open("models.json", "r") as jsonfile:
+        models = json.load(jsonfile)
+    seeds = [1234, 51324, 1256, 123512]
+    seeds = [1234]
+
+    for model in models:
+        print(model)
+        classifier_class = getattr(classifiers, model["classifier"])
+        variations = model["variations"]
+        for variation in variations:
+            best_score = 0
+            best_seed = None
+            kwargs = variation["kwargs"]
+            print(kwargs)
+            for seed in seeds:
+                classifier = classifier_class(**kwargs, verbose=True)
+                accuracy = train_and_test(classifier, seed)
+                if accuracy > best_score:
+                    best_score = accuracy
+                    best_seed = seed
+
+            variation["best score"] = best_score
+            variation["best seed"] = best_seed
+
+
+    with open("results.json", "w") as f:
+        json.dump(models, f)
+
+
+
+def main():
+    batch_size = 128
+    convolutions = [
+        (32, (3, 3), "relu"),
+        (64, (3, 3), "relu"),
+    ]
+    dense_layers = [
+        (128, "relu"),
+        (512, "relu")
+    ]
+    epochs = 40
+    seed = 1234
+
+    classifier = classifiers.NNClassifier(batch_size=batch_size,
+                                          convolutions=convolutions,
+                                          dense_layers=dense_layers,
+                                          epochs=epochs,
+                                          verbose=True)
+    accuracy = train_and_test(classifier, seed=seed, create_submission=True)
+    print(accuracy)
 
 if __name__ == "__main__":
     main()
